@@ -3,7 +3,7 @@
 class EventNode extends ANode {
 
     constructor() {
-        super("event", "Event");
+        super("event", "EventNode");
     }
 
     getInputs() {
