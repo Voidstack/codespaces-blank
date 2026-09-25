@@ -7,11 +7,11 @@ class EventNode extends ANode {
     }
 
     getInputs() {
-        return 0;
+        return 1;
     }
 
     getOutputs() {
-        return 1;
+        return 0;
     }
 
     getDefaultData() {

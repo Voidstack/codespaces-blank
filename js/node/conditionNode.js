@@ -1,9 +1,9 @@
-// node/responseNode.js
+// node/conditionNode.js
 
-class ResponseNode extends ANode {
+class ConditionNode extends ANode {
 
     constructor() {
-        super("response", "Response");
+        super("condition", "Condition");
     }
 
     getInputs() {
@@ -11,40 +11,38 @@ class ResponseNode extends ANode {
     }
 
     getOutputs() {
-        return 1;
+        return 2;
+    }
+
+    getOutputLabel(data, outputIndex) {
+        return outputIndex === 1 ? "True" : "False";
     }
 
     getDefaultData() {
         return {
-            text: "",
             condition: ""
         };
     }
 
     render(data) {
         return `
-            <div class="response-node">
-                <div class="response-title">Response</div>
+            <div class="condition-node">
+                <div class="condition-title">Condition</div>
                 <label class="node-label">
                     Condition
                     <input
                         type="text"
                         data-node-field="condition"
-                        value="${escapeResponseText(data.condition ?? "")}"
+                        value="${escapeConditionText(data.condition)}"
                     >
                 </label>
-                <textarea
-                    class="node-string"
-                    data-node-string
-                    rows="2"
-                >${escapeResponseText(data.text)}</textarea>
             </div>
         `;
     }
 }
 
-function escapeResponseText(value) {
-    return String(value)
+function escapeConditionText(value) {
+    return String(value ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
@@ -52,4 +50,4 @@ function escapeResponseText(value) {
         .replaceAll("'", "&#039;");
 }
 
-registerNode(new ResponseNode());
+registerNode(new ConditionNode());

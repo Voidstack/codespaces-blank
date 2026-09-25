@@ -59,37 +59,50 @@ editor.reroute = true;
 editor.start();
 
 
-function getSpeechResponseCount(data) {
-    return Math.max(0, Math.floor(Number(data.nmbResponse)) || 0);
-}
+editorElement.addEventListener(
+    "wheel",
+    event => {
+        if (event.target.closest("textarea, input, button")) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (event.deltaY < 0 && editor.zoom < editor.zoom_max) {
+            editor.zoom_in();
+        }
+
+        if (event.deltaY > 0 && editor.zoom > editor.zoom_min) {
+            editor.zoom_out();
+        }
+    },
+    { passive: false }
+);
 
 
-function getSpeechOutputLabel(data, outputIndex) {
-    const responseCount = getSpeechResponseCount(data);
-
-    if (responseCount === 0 && outputIndex === 1) {
-        return "Default";
-    }
-
-    if (outputIndex <= responseCount) {
-        return `Response ${outputIndex}`;
-    }
-
-    if (data.isClosable === true) {
-        return "Close";
-    }
-
-    return `Output ${outputIndex}`;
-}
-
-
-function updateSpeechOutputLabels(nodeId) {
+function updateNodePortLabels(nodeId) {
     const nodeData = editor.getNodeFromId(nodeId);
     const nodeElement = document.getElementById(`node-${nodeId}`);
+    const nodeDefinition = nodeData && nodeRegistry.get(nodeData.name);
 
-    if (!nodeData || nodeData.name !== "speech" || !nodeElement) {
+    if (!nodeData || !nodeDefinition || !nodeElement) {
         return;
     }
+
+    nodeElement.querySelectorAll(".inputs .input").forEach(input => {
+        const inputIndex = Number(
+            [...input.classList]
+                .find(className => className.startsWith("input_"))
+                ?.replace("input_", "")
+        );
+        const label = nodeDefinition.getInputLabel(
+            nodeData.data,
+            inputIndex
+        );
+
+        input.dataset.label = label;
+        input.title = label;
+    });
 
     nodeElement.querySelectorAll(".outputs .output").forEach(output => {
         const outputIndex = Number(
@@ -97,7 +110,10 @@ function updateSpeechOutputLabels(nodeId) {
                 .find(className => className.startsWith("output_"))
                 ?.replace("output_", "")
         );
-        const label = getSpeechOutputLabel(nodeData.data, outputIndex);
+        const label = nodeDefinition.getOutputLabel(
+            nodeData.data,
+            outputIndex
+        );
 
         output.dataset.label = label;
         output.title = label;
@@ -112,18 +128,34 @@ editor.on(
         const targetId = Number(connection.input_id);
         const source = editor.getNodeFromId(sourceId);
         const target = editor.getNodeFromId(targetId);
+        const sourceDefinition = source && nodeRegistry.get(source.name);
 
-        if (!source || !target || source.name !== "speech") {
+        if (!source || !target || !sourceDefinition) {
             return;
         }
 
-        const outputIndex = Number(
-            connection.output_class.replace("output_", "")
+        const connectionAllowed = sourceDefinition.canConnectOutput(
+            source.data,
+            connection.output_class,
+            target.name
         );
-        const responseCount = getSpeechResponseCount(source.data);
-        const isResponseOutput = responseCount > 0 && outputIndex <= responseCount;
 
-        if (isResponseOutput && target.name !== "response") {
+        if (!connectionAllowed) {
+            editor.removeSingleConnection(
+                sourceId,
+                targetId,
+                connection.output_class,
+                connection.input_class
+            );
+        }
+
+        const connections = source.outputs[connection.output_class]?.connections || [];
+        const maxConnections = sourceDefinition.getOutputMaxConnections(
+            source.data,
+            connection.output_class
+        );
+
+        if (connections.length > maxConnections) {
             editor.removeSingleConnection(
                 sourceId,
                 targetId,
@@ -169,7 +201,9 @@ async function loadGraph(name) {
     editor.import(graph);
 
     document.querySelectorAll(".drawflow-node").forEach(nodeElement => {
-        updateSpeechOutputLabels(getNodeId(nodeElement));
+        const nodeId = getNodeId(nodeElement);
+
+        updateNodePortLabels(nodeId);
     });
 }
 
@@ -286,9 +320,7 @@ editorElement.addEventListener(
                         y
                     );
 
-                    if (node.getType() === "speech") {
-                        updateSpeechOutputLabels(createdNodeId);
-                    }
+                    updateNodePortLabels(createdNodeId);
 
                     closeContextMenu();
                 }
@@ -355,7 +387,9 @@ async function importGraphFromFile(file) {
     editor.import(graph);
 
     document.querySelectorAll(".drawflow-node").forEach(nodeElement => {
-        updateSpeechOutputLabels(getNodeId(nodeElement));
+        const nodeId = getNodeId(nodeElement);
+
+        updateNodePortLabels(nodeId);
     });
 
     setGraphStatus("Graphe importé");
@@ -468,6 +502,50 @@ function getNodeFromTarget(target) {
 }
 
 
+function refreshNodeContent(node) {
+    const nodeDefinition = nodeRegistry.get(node.data.name);
+    const content = node.element.querySelector(".drawflow_content_node");
+
+    if (!nodeDefinition || !content) {
+        return;
+    }
+
+    content.innerHTML = nodeDefinition.render(node.data.data);
+    updateNodePortLabels(node.id);
+}
+
+
+function updateNodeField(event) {
+    const field = event.target.closest("[data-node-field]");
+    const node = field && getNodeFromTarget(field);
+
+    if (!field || !node?.data) {
+        return;
+    }
+
+    const value = field.type === "checkbox"
+        ? field.checked
+        : field.dataset.fieldType === "int"
+            ? Math.max(0, Math.floor(Number(field.value)) || 0)
+            : field.value;
+
+    if (field.type === "checkbox") {
+        field.checked = value;
+    } else {
+        field.value = value;
+    }
+    node.data.data[field.dataset.nodeField] = value;
+    editor.updateNodeDataFromId(node.id, node.data.data);
+
+    if (
+        node.data.name === "move" &&
+        field.dataset.nodeField === "moveType"
+    ) {
+        refreshNodeContent(node);
+    }
+}
+
+
 editorElement.addEventListener(
     "pointerdown",
     event => {
@@ -493,6 +571,8 @@ editorElement.addEventListener(
 editorElement.addEventListener(
     "input",
     event => {
+        updateNodeField(event);
+
         const node = getSpeechNodeFromEvent(event);
 
         if (node) {
@@ -513,6 +593,8 @@ editorElement.addEventListener(
 editorElement.addEventListener(
     "change",
     event => {
+        updateNodeField(event);
+
         const outputField = event.target.closest(".speech-output-count");
         const closableField = event.target.closest(".speech-closable-toggle");
 
@@ -541,7 +623,7 @@ editorElement.addEventListener(
             const outputCount = speechNode.getOutputs(node.data.data);
 
             updateNodeOutputs(node.id, outputCount);
-            updateSpeechOutputLabels(node.id);
+            updateNodePortLabels(node.id);
         }
     }
 );
@@ -583,7 +665,7 @@ editorElement.addEventListener(
             content.innerHTML = speechNode.render(nodeData);
         }
 
-        updateSpeechOutputLabels(nodeId);
+        updateNodePortLabels(nodeId);
     },
     true
 );
@@ -595,7 +677,8 @@ async function init() {
     const cameraNode = nodeRegistry.get("camera");
 
     if (cameraNode && editor.drawflow.Home?.data) {
-        cameraNode.create(editor, 120, 100);
+        const cameraNodeId = cameraNode.create(editor, 120, 100);
+        updateNodePortLabels(cameraNodeId);
     }
 }
 

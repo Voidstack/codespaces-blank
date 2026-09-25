@@ -23,6 +23,22 @@ class ANode {
         return 1;
     }
 
+    getInputLabel(data, inputIndex) {
+        return `Input ${inputIndex}`;
+    }
+
+    getOutputLabel(data, outputIndex) {
+        return `Output ${outputIndex}`;
+    }
+
+    canConnectOutput(data, outputClass, targetType) {
+        return true;
+    }
+
+    getOutputMaxConnections(data, outputClass) {
+        return Infinity;
+    }
+
     getDefaultData() {
         return {};
     }

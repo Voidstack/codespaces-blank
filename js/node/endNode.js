@@ -15,13 +15,25 @@ class EndNode extends ANode {
     }
 
     getDefaultData() {
-        return {};
+        return {
+            releaseCam: true
+        };
     }
 
-    render() {
+    render(data) {
+        const releaseCam = data?.releaseCam !== false;
+
         return `
             <div class="end-node">
                 <div class="end-title">End</div>
+                <label class="speech-closable">
+                    <input
+                        type="checkbox"
+                        data-node-field="releaseCam"
+                        ${releaseCam ? "checked" : ""}
+                    >
+                    Release camera
+                </label>
             </div>
         `;
     }
