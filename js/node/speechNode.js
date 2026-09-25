@@ -11,12 +11,20 @@ class SpeechNode extends ANode {
     }
 
     getOutputs(data) {
-        return Math.max(1, Number(data.nmbResponse) || 1);
+        const responseCount = Math.max(
+            1,
+            Math.floor(Number(data.nmbResponse)) || 0
+        );
+        const closableOutput = data.isClosable === true ? 1 : 0;
+
+        return responseCount + closableOutput;
     }
 
     getDefaultData() {
         return {
             speaker: "",
+            nmbResponse: 0,
+            isClosable: false,
             texts: [""]
         };
     }
@@ -31,6 +39,24 @@ class SpeechNode extends ANode {
                 <div class="speech-title">Speech</div>
                 <label class="speech-label">
                     Texts
+                </label>
+                <label class="speech-label" for="speech-output-count">
+                    Outputs
+                </label>
+                <input
+                    class="speech-output-count"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value="${Math.max(0, Math.floor(Number(data.nmbResponse)) || 0)}"
+                >
+                <label class="speech-closable">
+                    <input
+                        class="speech-closable-toggle"
+                        type="checkbox"
+                        ${data.isClosable === true ? "checked" : ""}
+                    >
+                    Closable
                 </label>
                 <div class="speech-texts">
                     ${texts.map((text, index) => `
