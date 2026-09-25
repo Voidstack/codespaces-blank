@@ -15,13 +15,23 @@ class StartNode extends ANode {
     }
 
     getDefaultData() {
-        return {};
+        return {
+            handlePlayer: true
+        };
     }
 
-    render() {
+    render(data) {
         return `
             <div class="start-node">
                 <div class="start-title">Start</div>
+                <label class="speech-closable">
+                    Handle player
+                    <input
+                        type="checkbox"
+                        data-node-field="handlePlayer"
+                        ${data?.handlePlayer !== false ? "checked" : ""}
+                    >
+                </label>
             </div>
         `;
     }

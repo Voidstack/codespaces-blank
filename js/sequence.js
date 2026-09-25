@@ -270,6 +270,78 @@ function closeContextMenu() {
 }
 
 
+function addNodeToMenuTree(tree, node) {
+    let currentTree = tree;
+
+    for (const part of node.getMenuPath()) {
+        if (!currentTree.has(part)) {
+            currentTree.set(part, {
+                children: new Map(),
+                node: null
+            });
+        }
+
+        const entry = currentTree.get(part);
+
+        if (part === node.getMenuPath().at(-1)) {
+            entry.node = node;
+        }
+
+        currentTree = entry.children;
+    }
+}
+
+
+function createNodeMenuItem(node, event) {
+    const item = document.createElement("div");
+
+    item.className = "context-menu-item";
+    item.textContent = node.getLabel();
+
+    item.addEventListener(
+        "click",
+        () => {
+            const rect = editorElement.getBoundingClientRect();
+            const createdNodeId = node.create(
+                editor,
+                event.clientX - rect.left,
+                event.clientY - rect.top
+            );
+
+            updateNodePortLabels(createdNodeId);
+            closeContextMenu();
+        }
+    );
+
+    return item;
+}
+
+
+function createNodeMenuLevel(tree, event, isRoot = false) {
+    const level = document.createElement("div");
+
+    level.className = isRoot
+        ? "context-menu-level context-menu-root"
+        : "context-menu-level context-menu-submenu";
+
+    for (const [label, entry] of tree) {
+        if (entry.node && entry.children.size === 0) {
+            level.appendChild(createNodeMenuItem(entry.node, event));
+            continue;
+        }
+
+        const folder = document.createElement("div");
+
+        folder.className = "context-menu-folder";
+        folder.textContent = label;
+        folder.appendChild(createNodeMenuLevel(entry.children, event));
+        level.appendChild(folder);
+    }
+
+    return level;
+}
+
+
 editorElement.addEventListener(
     "contextmenu",
     event => {
@@ -288,47 +360,13 @@ editorElement.addEventListener(
             "context-menu";
 
 
+        const menuTree = new Map();
+
         for (const node of nodeRegistry.values()) {
-
-            const item =
-                document.createElement("div");
-
-            item.className =
-                "context-menu-item";
-
-            item.textContent =
-                node.getLabel();
-
-
-            item.addEventListener(
-                "click",
-                () => {
-
-                    const rect =
-                        editorElement.getBoundingClientRect();
-
-                    const x =
-                        event.clientX - rect.left;
-
-                    const y =
-                        event.clientY - rect.top;
-
-
-                    const createdNodeId = node.create(
-                        editor,
-                        x,
-                        y
-                    );
-
-                    updateNodePortLabels(createdNodeId);
-
-                    closeContextMenu();
-                }
-            );
-
-
-            menu.appendChild(item);
+            addNodeToMenuTree(menuTree, node);
         }
+
+        menu.appendChild(createNodeMenuLevel(menuTree, event, true));
 
 
         menu.style.left =

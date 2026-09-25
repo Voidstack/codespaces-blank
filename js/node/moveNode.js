@@ -3,7 +3,7 @@
 class MoveNode extends ANode {
 
     constructor() {
-        super("move", "Move");
+        super("move", "Event/Move");
     }
 
     getInputs() {
@@ -18,7 +18,8 @@ class MoveNode extends ANode {
         return {
             moveType: "TP",
             speed: 1,
-            completion: "WAIT_FOR_COMPLETION"
+            completion: "WAIT_FOR_COMPLETION",
+            speaker: ""
         };
     }
 
@@ -31,10 +32,19 @@ class MoveNode extends ANode {
             : "WAIT_FOR_COMPLETION";
         const speed = Math.max(0, Math.floor(Number(data.speed)) || 0);
         const customSpeed = moveType === "WALK_CUSTOM";
+        const speaker = data.speaker ?? "";
 
         return `
             <div class="move-node">
                 <div class="move-title">Move</div>
+                <label class="node-label">
+                    Speaker
+                    <input
+                        type="text"
+                        data-node-field="speaker"
+                        value="${escapeMoveText(speaker)}"
+                    >
+                </label>
                 <label class="node-label">
                     Type
                     <select data-node-field="moveType">
@@ -65,6 +75,15 @@ class MoveNode extends ANode {
             </div>
         `;
     }
+}
+
+function escapeMoveText(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
 registerNode(new MoveNode());

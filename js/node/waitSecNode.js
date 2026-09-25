@@ -3,7 +3,7 @@
 class WaitSecNode extends ANode {
 
     constructor() {
-        super("waitSec", "Wait seconds");
+        super("waitSec", "Event/Wait seconds");
     }
 
     getInputs() {

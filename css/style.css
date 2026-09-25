@@ -132,6 +132,44 @@ body {
     box-shadow: 0 8px 20px rgb(15 23 42 / 16%);
 }
 
+.context-menu-level {
+    min-width: 160px;
+}
+
+.context-menu-submenu {
+    position: absolute;
+    top: -5px;
+    left: calc(100% - 4px);
+    display: none;
+    padding: 4px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgb(15 23 42 / 16%);
+}
+
+.context-menu-folder {
+    position: relative;
+    padding: 8px 28px 8px 12px;
+    cursor: default;
+    color: #0f172a;
+}
+
+.context-menu-folder::after {
+    position: absolute;
+    right: 10px;
+    content: ">";
+    color: #64748b;
+}
+
+.context-menu-folder:hover {
+    background: #eff6ff;
+}
+
+.context-menu-folder:hover > .context-menu-submenu {
+    display: block;
+}
+
 .context-menu-item {
     padding: 8px 12px;
     cursor: pointer;
@@ -154,6 +192,7 @@ body {
 .event-title,
 .move-title,
 .condition-title,
+.context-title,
 .wait-sec-title {
     font-weight: 700;
     color: #0f172a;

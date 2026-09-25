@@ -16,7 +16,8 @@ class EndNode extends ANode {
 
     getDefaultData() {
         return {
-            releaseCam: true
+            releaseCam: true,
+            releasePlayer: true
         };
     }
 
@@ -33,6 +34,14 @@ class EndNode extends ANode {
                         ${releaseCam ? "checked" : ""}
                     >
                     Release camera
+                </label>
+                <label class="speech-closable">
+                    Release player
+                    <input
+                        type="checkbox"
+                        data-node-field="releasePlayer"
+                        ${data?.releasePlayer !== false ? "checked" : ""}
+                    >
                 </label>
             </div>
         `;

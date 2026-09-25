@@ -3,7 +3,7 @@
 class CameraNode extends ANode {
 
     constructor() {
-        super("camera", "Camera");
+        super("camera", "Event/Camera");
     }
 
     getInputs() {

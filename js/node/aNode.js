@@ -12,7 +12,17 @@ class ANode {
     }
 
     getLabel() {
-        return this.label;
+        return this.label.split("/").at(-1);
+    }
+
+    getCategory() {
+        return this.getMenuPath()[0];
+    }
+
+    getMenuPath() {
+        const path = this.label.split("/").filter(Boolean);
+
+        return path;
     }
 
     getInputs() {
