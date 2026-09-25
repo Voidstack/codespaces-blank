@@ -1,4 +1,4 @@
-// node/nodeCamera.js
+// node/cameraNode.js
 
 class CameraNode extends ANode {
 

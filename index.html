@@ -21,6 +21,15 @@
 <body>
 
     <div id="debug"></div>
+    <header class="app-toolbar">
+        <strong>SequenceGraph</strong>
+        <div class="toolbar-actions">
+            <button id="export-graph" type="button">Export JSON</button>
+            <button id="import-graph" type="button">Import JSON</button>
+            <input id="import-file" type="file" accept="application/json,.json" hidden>
+        </div>
+        <span id="graph-status" aria-live="polite"></span>
+    </header>
     <div id="editor"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/drawflow/dist/drawflow.min.js"></script>
