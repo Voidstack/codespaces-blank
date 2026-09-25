@@ -1,0 +1,49 @@
+// node/aNode.js
+
+class ANode {
+
+    constructor(type, label) {
+        this.type = type;
+        this.label = label;
+    }
+
+    getType() {
+        return this.type;
+    }
+
+    getLabel() {
+        return this.label;
+    }
+
+    getInputs() {
+        return 1;
+    }
+
+    getOutputs(data) {
+        return 1;
+    }
+
+    getDefaultData() {
+        return {};
+    }
+
+    render(data) {
+        return `<div>${this.label}</div>`;
+    }
+
+    create(editor, x, y) {
+        const data = this.getDefaultData();
+
+        return editor.addNode(
+            this.type,
+            this.getInputs(data),
+            this.getOutputs(data),
+            x,
+            y,
+            this.type,
+            data,
+            this.render(data),
+            false
+        );
+    }
+}
